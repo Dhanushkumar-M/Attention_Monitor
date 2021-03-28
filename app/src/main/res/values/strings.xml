@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Attention Monitor</string>
+    <string name="file_demo" />
+    <string name="welcome_to_attention_level_monitor_system">WELCOME TO ATTENTION LEVEL MONITOR SYSTEM</string>
+    <string name="lalp">LAlp.</string>
+
+    <string name="hbeta">HBeta</string>
+    <string name="lbeta">LBeta</string>
+
+    <string name="halp">HAlp.</string>
+    <string name="_00">00</string>
+    <string name="signal">Signal</string>
+    <string name="start">Start</string>
+</resources>
