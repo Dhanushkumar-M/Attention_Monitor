@@ -22,13 +22,14 @@ import com.neurosky.connection.TgStreamReader;
  */
 public class DemoActivity extends Activity {
 	private static final String TAG = com.example.attentionmonitor.DemoActivity.class.getSimpleName();
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setContentView(R.layout.main_view);
+
 
 		initView();
 		// (1) Example of redirectConsoleLogToDocumentFolder()
@@ -58,7 +59,7 @@ public class DemoActivity extends Activity {
 		//tv_uart = (TextView) findViewById(R.id.tv_uart);
 
 		btn_filedemo = (Button) findViewById(R.id.btn_filedemo);
-		btn_adapter = (Button) findViewById(R.id.btn_adapter);
+		//btn_adapter = (Button) findViewById(R.id.btn_adapter);
 		btn_device = (Button) findViewById(R.id.btn_device);
 		//btn_uart = (Button) findViewById(R.id.btn_uart);
 		
@@ -73,7 +74,7 @@ public class DemoActivity extends Activity {
 		});
 
 		
-		btn_adapter.setOnClickListener(new OnClickListener() {
+	/*	btn_adapter.setOnClickListener(new OnClickListener() {
 
 			@Override
 			public void onClick(View arg0) {
@@ -81,7 +82,7 @@ public class DemoActivity extends Activity {
 				Log.d(TAG,"Start the BluetoothAdapterDemoActivity");
 				startActivity(intent);
 			}
-		});
+		}); */
 		btn_device.setOnClickListener(new OnClickListener() {
 
 			@Override
@@ -100,8 +101,6 @@ public class DemoActivity extends Activity {
 //			}
 //		});
 	}
-
-
 
 	@Override
 	protected void onDestroy() {

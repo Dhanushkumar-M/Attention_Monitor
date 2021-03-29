@@ -25,11 +25,10 @@
             </intent-filter>
         </activity>
         <activity android:name="com.example.attentionmonitor.FileDemoActivity"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="portrait"/>
         <activity android:name="com.example.attentionmonitor.BluetoothDeviceDemoActivity"
-            android:screenOrientation="landscape"/>
-        <activity android:name="com.example.attentionmonitor.BluetoothAdapterDemoActivity"
-            android:screenOrientation="landscape"/>
+            android:screenOrientation="portrait"/>
+
     </application>
 
 </manifest>
