@@ -7,7 +7,6 @@
     android:background="#C4C4C4"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
-
     <TextView
 
         android:id="@+id/tv_ps_lable"
@@ -40,7 +39,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"
         android:gravity="center"
-        android:text="Meditation Level"
+        android:text="Attention Level"
         android:textColor="#000000"
         android:textSize="35sp" />
 

@@ -45,7 +45,7 @@ import java.util.Set;
  * (4) setTgStreamHandler
  */
 public class BluetoothDeviceDemoActivity extends Activity {
-	private static final String TAG = com.example.attentionmonitor.BluetoothDeviceDemoActivity.class.getSimpleName();
+	private static final String TAG = BluetoothDeviceDemoActivity.class.getSimpleName();
 	private TgStreamReader tgStreamReader;
 	
 	// TODO connection sdk
@@ -91,49 +91,7 @@ public class BluetoothDeviceDemoActivity extends Activity {
 
 	
 	private int badPacketCount = 0;
-
-	private void initView() {
-		tv_ps = (TextView) findViewById(R.id.tv_ps);
-		tv_attention = (TextView) findViewById(R.id.tv_attention);
-		tv_meditation = (TextView) findViewById(R.id.tv_meditation);
-
-		btn_start = (Button) findViewById(R.id.btn_start);
-		btn_stop = (Button) findViewById(R.id.btn_stop);
-
-		btn_start.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View arg0) {
-				badPacketCount = 0;
-				showToast("connecting ...", Toast.LENGTH_SHORT);
-				start();
-			}
-		});
-
-		btn_stop.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View arg0) {
-				// TODO Auto-generated method stub
-				if(tgStreamReader != null){
-					tgStreamReader.stop();
-				}
-			}
-
-		});
-		
-		btn_selectdevice =  (Button) findViewById(R.id.btn_selectdevice);
-		
-		btn_selectdevice.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View arg0) {
-				// TODO Auto-generated method stub
-				scanDevice();
-			}
-
-		});
-	}
+	private final boolean isPressing = false;
 	
 	private void start(){
 		if(address != null){
@@ -179,7 +137,70 @@ public class BluetoothDeviceDemoActivity extends Activity {
 	// TODO view
 
 	private int currentState = 0;
-	private TgStreamHandler callback = new TgStreamHandler() {
+	private final Handler LinkDetectedHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+
+			switch (msg.what) {
+			case 1234:
+        		tgStreamReader.MWM15_getFilterType();
+        		isReadFilter = true;
+        		Log.d(TAG,"MWM15_getFilterType ");
+
+        		break;
+        	case 1235:
+        		tgStreamReader.MWM15_setFilterType(FilterType.FILTER_60HZ);
+        		Log.d(TAG,"MWM15_setFilter  60HZ");
+        		LinkDetectedHandler.sendEmptyMessageDelayed(1237, 1000);
+        		break;
+        	case 1236:
+        		tgStreamReader.MWM15_setFilterType(FilterType.FILTER_50HZ);
+        		Log.d(TAG,"MWM15_SetFilter 50HZ ");
+        		LinkDetectedHandler.sendEmptyMessageDelayed(1237, 1000);
+        		break;
+
+			case 1237:
+        		tgStreamReader.MWM15_getFilterType();
+        		Log.d(TAG,"MWM15_getFilterType ");
+        		break;
+
+        	case MindDataType.CODE_FILTER_TYPE:
+        		Log.d(TAG,"CODE_FILTER_TYPE: " + msg.arg1 + "  isReadFilter: " + isReadFilter);
+        		if(isReadFilter){
+        			isReadFilter = false;
+        			if(msg.arg1 == FilterType.FILTER_50HZ.getValue()){
+        				LinkDetectedHandler.sendEmptyMessageDelayed(1235, 1000);
+        			}else if(msg.arg1 == FilterType.FILTER_60HZ.getValue()){
+        				LinkDetectedHandler.sendEmptyMessageDelayed(1236, 1000);
+        			}else{
+        				Log.e(TAG,"Error filter type");
+        			}
+        		}
+
+        		break;
+			case MindDataType.CODE_MEDITATION:
+				Log.d(TAG, "HeadDataType.CODE_MEDITATION " + msg.arg1);
+				tv_meditation.setText("" +msg.arg1 );
+				break;
+			case MindDataType.CODE_ATTENTION:
+				Log.d(TAG, "CODE_ATTENTION " + msg.arg1);
+				tv_attention.setText("" +msg.arg1 );
+				break;
+
+			case MindDataType.CODE_POOR_SIGNAL://
+				int poorSignal = msg.arg1;
+				Log.d(TAG, "poorSignal:" + poorSignal);
+				tv_ps.setText(""+msg.arg1);
+
+				break;
+			default:
+				break;
+			}
+			super.handleMessage(msg);
+		}
+	};
+	private final TgStreamHandler callback = new TgStreamHandler() {
 
 		@Override
 		public void onStatesChanged(int connectionStates) {
@@ -218,7 +239,7 @@ public class BluetoothDeviceDemoActivity extends Activity {
 			msg.what = MSG_UPDATE_STATE;
 			msg.arg1 = connectionStates;
 			LinkDetectedHandler.sendMessage(msg);
-			
+
 
 		}
 
@@ -232,7 +253,7 @@ public class BluetoothDeviceDemoActivity extends Activity {
 		@Override
 		public void onChecksumFail(byte[] payload, int length, int checksum) {
 			// TODO Auto-generated method stub
-			
+
 			badPacketCount ++;
 			Message msg = LinkDetectedHandler.obtainMessage();
 			msg.what = MSG_UPDATE_BAD_PACKET;
@@ -253,77 +274,45 @@ public class BluetoothDeviceDemoActivity extends Activity {
 		}
 
 	};
-
-	private boolean isPressing = false;
 	private static final int MSG_UPDATE_BAD_PACKET = 1001;
 	private static final int MSG_UPDATE_STATE = 1002;
 	private static final int MSG_CONNECT = 1003;
 	private boolean isReadFilter = false;
 
 	int raw;
-	private Handler LinkDetectedHandler = new Handler() {
+ //Select device operation
+ private final OnItemClickListener selectDeviceItemClickListener = new OnItemClickListener(){
 
 		@Override
-		public void handleMessage(Message msg) {
+		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+			// TODO Auto-generated method stub
+			Log.d(TAG, "Rico ####  list_select onItemClick     ");
+	    	if(mBluetoothAdapter.isDiscovering()){
+	    		mBluetoothAdapter.cancelDiscovery();
+	    	}
+	    	//unregister receiver
+	    	com.example.attentionmonitor.BluetoothDeviceDemoActivity.this.unregisterReceiver(mReceiver);
 
-			switch (msg.what) {
-			case 1234:
-        		tgStreamReader.MWM15_getFilterType();
-        		isReadFilter = true;
-        		Log.d(TAG,"MWM15_getFilterType ");
-        		
-        		break;
-        	case 1235:
-        		tgStreamReader.MWM15_setFilterType(FilterType.FILTER_60HZ);
-        		Log.d(TAG,"MWM15_setFilter  60HZ");
-        		LinkDetectedHandler.sendEmptyMessageDelayed(1237, 1000);
-        		break;
-        	case 1236:
-        		tgStreamReader.MWM15_setFilterType(FilterType.FILTER_50HZ);
-        		Log.d(TAG,"MWM15_SetFilter 50HZ ");
-        		LinkDetectedHandler.sendEmptyMessageDelayed(1237, 1000);
-        		break;
-        		
-			case 1237:
-        		tgStreamReader.MWM15_getFilterType();
-        		Log.d(TAG,"MWM15_getFilterType ");
-        		break;
-        		
-        	case MindDataType.CODE_FILTER_TYPE:
-        		Log.d(TAG,"CODE_FILTER_TYPE: " + msg.arg1 + "  isReadFilter: " + isReadFilter);
-        		if(isReadFilter){
-        			isReadFilter = false;
-        			if(msg.arg1 == FilterType.FILTER_50HZ.getValue()){
-        				LinkDetectedHandler.sendEmptyMessageDelayed(1235, 1000);
-        			}else if(msg.arg1 == FilterType.FILTER_60HZ.getValue()){
-        				LinkDetectedHandler.sendEmptyMessageDelayed(1236, 1000);
-        			}else{
-        				Log.e(TAG,"Error filter type");
-        			}
-        		}
-        		
-        		break;
-			case MindDataType.CODE_MEDITATION:
-				Log.d(TAG, "HeadDataType.CODE_MEDITATION " + msg.arg1);
-				tv_meditation.setText("" +msg.arg1 );
-				break;
-			case MindDataType.CODE_ATTENTION:
-				Log.d(TAG, "CODE_ATTENTION " + msg.arg1);
-				tv_attention.setText("" +msg.arg1 );
-				break;
+	    	mBluetoothDevice =deviceListApapter.getDevice(arg2);
+	    	selectDialog.dismiss();
+	    	selectDialog = null;
 
-			case MindDataType.CODE_POOR_SIGNAL://
-				int poorSignal = msg.arg1;
-				Log.d(TAG, "poorSignal:" + poorSignal);
-				tv_ps.setText(""+msg.arg1);
+			Log.d(TAG,"onItemClick name: "+mBluetoothDevice.getName() + " , address: " + mBluetoothDevice.getAddress() );
+			address = mBluetoothDevice.getAddress();
 
-				break;
-			default:
-				break;
-			}
-			super.handleMessage(msg);
+			//ger remote device
+			BluetoothDevice remoteDevice = mBluetoothAdapter.getRemoteDevice(mBluetoothDevice.getAddress());
+
+			//bind and connect
+			//bindToDevice(remoteDevice); // create bond works unstable on Samsung S5
+			//showToast("pairing ...",Toast.LENGTH_SHORT);
+
+			tgStreamReader = createStreamReader(remoteDevice);
+			tgStreamReader.connectAndStart();
+
 		}
-	};
+
+ };
 	
 	
 	public void showToast(final String msg, final int timeStyle){
@@ -357,11 +346,54 @@ public class BluetoothDeviceDemoActivity extends Activity {
     	mBluetoothAdapter.startDiscovery();
     }
     
+	private void initView() {
+		tv_ps = findViewById(R.id.tv_ps);
+		tv_attention = findViewById(R.id.tv_attention);
+		tv_meditation = findViewById(R.id.tv_meditation);
+
+		btn_start = findViewById(R.id.btn_start);
+		btn_stop = findViewById(R.id.btn_stop);
+
+		btn_start.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				badPacketCount = 0;
+				showToast("connecting ...", Toast.LENGTH_SHORT);
+				start();
+			}
+		});
+
+		btn_stop.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				if(tgStreamReader != null){
+					tgStreamReader.stop();
+				}
+			}
+
+		});
+
+		btn_selectdevice = findViewById(R.id.btn_selectdevice);
+
+		btn_selectdevice.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				scanDevice();
+			}
+
+		});
+	}
+ 
  private void setUpDeviceListView(){
-    	
+
     	LayoutInflater inflater = LayoutInflater.from(this);
 		View view = inflater.inflate(R.layout.dialog_select_device, null);
-		list_select = (ListView) view.findViewById(R.id.list_select);
+		list_select = view.findViewById(R.id.list_select);
 		selectDialog = new Dialog(this, R.style.dialog1);
 		selectDialog.setContentView(view);
     	//List device dialog
@@ -369,7 +401,7 @@ public class BluetoothDeviceDemoActivity extends Activity {
     	deviceListApapter = new BTDeviceListAdapter(this);
     	list_select.setAdapter(deviceListApapter);
     	list_select.setOnItemClickListener(selectDeviceItemClickListener);
-    	
+
     	selectDialog.setOnCancelListener(new OnCancelListener(){
 
 			@Override
@@ -378,51 +410,17 @@ public class BluetoothDeviceDemoActivity extends Activity {
 				Log.e(TAG,"onCancel called!");
 				com.example.attentionmonitor.BluetoothDeviceDemoActivity.this.unregisterReceiver(mReceiver);
 			}
-    		
+
     	});
-    	
+
     	selectDialog.show();
-    	
+
     	Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
     	for(BluetoothDevice device: pairedDevices){
     		deviceListApapter.addDevice(device);
     	}
 		deviceListApapter.notifyDataSetChanged();
     }
- 
- //Select device operation
- private OnItemClickListener selectDeviceItemClickListener = new OnItemClickListener(){
-	 
-		@Override
-		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-			// TODO Auto-generated method stub
-			Log.d(TAG, "Rico ####  list_select onItemClick     ");
-	    	if(mBluetoothAdapter.isDiscovering()){
-	    		mBluetoothAdapter.cancelDiscovery();
-	    	}
-	    	//unregister receiver
-	    	com.example.attentionmonitor.BluetoothDeviceDemoActivity.this.unregisterReceiver(mReceiver);
-
-	    	mBluetoothDevice =deviceListApapter.getDevice(arg2);
-	    	selectDialog.dismiss();
-	    	selectDialog = null;
-	    	
-			Log.d(TAG,"onItemClick name: "+mBluetoothDevice.getName() + " , address: " + mBluetoothDevice.getAddress() );
-			address = mBluetoothDevice.getAddress().toString();
-			
-			//ger remote device
-			BluetoothDevice remoteDevice = mBluetoothAdapter.getRemoteDevice(mBluetoothDevice.getAddress().toString());
-         
-			//bind and connect
-			//bindToDevice(remoteDevice); // create bond works unstable on Samsung S5
-			//showToast("pairing ...",Toast.LENGTH_SHORT);
-
-			tgStreamReader = createStreamReader(remoteDevice); 
-			tgStreamReader.connectAndStart();
-		
-		}
-	
- };
  
  /**
 	 * If the TgStreamReader is created, just change the bluetooth

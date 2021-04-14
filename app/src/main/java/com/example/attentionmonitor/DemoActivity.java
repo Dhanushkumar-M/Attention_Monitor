@@ -1,10 +1,12 @@
 package com.example.attentionmonitor;
 
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
@@ -12,6 +14,9 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.neurosky.connection.TgStreamReader;
 
 /**
@@ -23,6 +28,15 @@ import com.neurosky.connection.TgStreamReader;
 public class DemoActivity extends Activity {
 	private static final String TAG = com.example.attentionmonitor.DemoActivity.class.getSimpleName();
 
+	private final Button btn_adapter = null;
+
+	private TextView tv_filedemo = null;
+	private TextView tv_adapter = null;
+	private TextView tv_device = null;
+	//private TextView  tv_uart = null;
+	
+	private Button btn_filedemo = null;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -30,6 +44,28 @@ public class DemoActivity extends Activity {
 		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setContentView(R.layout.main_view);
 
+		BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation);
+		bottomNavigationView.setSelectedItemId(R.id.navigation_home);
+
+		bottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+			@SuppressLint("NonConstantResourceId")
+			@Override
+			public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+				switch(item.getItemId()){
+					case R.id.navigation_profile:
+						startActivity(new Intent(getApplicationContext(),AccountPage.class));
+						overridePendingTransition(0,0);
+						return true;
+					case R.id.navigation_home:
+						return true;
+					case R.id.navigation_About:
+						startActivity(new Intent(getApplicationContext(), AboutPage.class));
+						overridePendingTransition(0,0);
+						return true;
+				}
+				return false;
+			}
+		});
 
 		initView();
 		// (1) Example of redirectConsoleLogToDocumentFolder()
@@ -40,27 +76,18 @@ public class DemoActivity extends Activity {
 		// (3) demo of getVersion
 		Log.d(TAG,"lib version: " + TgStreamReader.getVersion());
 	}
-
-	private TextView tv_filedemo = null;
-	private TextView tv_adapter = null;
-	private TextView tv_device = null;
-	//private TextView  tv_uart = null;
-	
-	private Button btn_filedemo = null;
-	private Button btn_adapter = null;
 	private Button btn_device = null;
 	//private Button btn_uart = null;
 
-
 	private void initView() {
-		tv_filedemo = (TextView) findViewById(R.id.tv_filedemo);
-		tv_adapter = (TextView) findViewById(R.id.tv_adapter);
-		tv_device = (TextView) findViewById(R.id.tv_device);
+		tv_filedemo = findViewById(R.id.tv_filedemo);
+		tv_adapter = findViewById(R.id.tv_adapter);
+		tv_device = findViewById(R.id.tv_device);
 		//tv_uart = (TextView) findViewById(R.id.tv_uart);
 
-		btn_filedemo = (Button) findViewById(R.id.btn_filedemo);
+		btn_filedemo = findViewById(R.id.btn_filedemo);
 		//btn_adapter = (Button) findViewById(R.id.btn_adapter);
-		btn_device = (Button) findViewById(R.id.btn_device);
+		btn_device = findViewById(R.id.btn_device);
 		//btn_uart = (Button) findViewById(R.id.btn_uart);
 		
 		btn_filedemo.setOnClickListener(new OnClickListener() {

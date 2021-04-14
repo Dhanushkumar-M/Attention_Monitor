@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cnb_unselectedColor="#fff">
+
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/icon_1"
+        android:title="@string/title_home"
+        app:cnb_backgroundColor="@color/colorPrimary"
+        app:cnb_iconColor="#ffffff"
+        app:cnb_textColor="#ffffff"/>
+
+    <item
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/icon_2"
+        android:title="@string/title_profile"
+        app:cnb_backgroundColor="@color/colorPrimary"
+        app:cnb_iconColor="#ffffff"
+        app:cnb_textColor="#ffffff"/>
+    <item
+        android:id="@+id/navigation_About"
+        android:icon="@drawable/icon_3"
+        android:title="@string/title_About"
+        app:cnb_backgroundColor="@color/colorPrimary"
+        app:cnb_iconColor="#ffffff"
+        app:cnb_textColor="#ffffff"/>
+
+</menu>
