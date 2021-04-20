@@ -1,5 +1,6 @@
 package com.example.attentionmonitor;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,6 +14,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.neurosky.connection.ConnectionStates;
 import com.neurosky.connection.DataType.MindDataType;
 import com.neurosky.connection.TgStreamHandler;
@@ -40,121 +45,33 @@ public class FileDemoActivity extends Activity {
 	private Button btn_start = null;
 	private Button btn_stop = null;
 
+
 	private int badPacketCount = 0;
 
 	private TgStreamReader tgStreamReader;
 
 
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		setContentView(R.layout.first_view);
-
-		initView();
-	}
-
-	private void initView() {
-		tv_ps = (TextView) findViewById(R.id.tv_ps);
-		tv_attention = (TextView) findViewById(R.id.tv_attention);
-		tv_meditation = (TextView) findViewById(R.id.tv_meditation);
-
-
-		btn_start = (Button) findViewById(R.id.btn_start);
-		btn_stop = (Button) findViewById(R.id.btn_stop);
-
-		
-		btn_start.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View arg0) {
-				badPacketCount = 0;
-				
-				// (3) How to destroy a TgStreamReader object
-				if(tgStreamReader != null){
-					tgStreamReader.stop();
-					tgStreamReader.close();
-					tgStreamReader = null;
-				}
-				InputStream is = getApplicationContext().getResources().openRawResource(R.raw.tgam_capture);
-				// Example of TgStreamReader(InputStream is, TgStreamHandler tgStreamHandler)
-		        tgStreamReader = new TgStreamReader(is, callback);
-		        
-		        // (1) Example of setReadFileBlockSize(int), the default block size is 8, call it before connectAndStart() or connect()
-		        tgStreamReader.setReadFileBlockSize(16);
-		        // (2) Example of setReadFileDelay(int), the default delay time is 2ms, call it before connectAndStart() or connect()
-		        tgStreamReader.setReadFileDelay(2);
-		        
-		        tgStreamReader.connectAndStart();
-			}
-		});
-
-		btn_stop.setOnClickListener(new OnClickListener() {
-
-			@Override
-			public void onClick(View arg0) {
-				// TODO Auto-generated method stub
-				stop();
-			}
-
-		});
-	}
-
-	public void stop() {
-		if(tgStreamReader != null){
-			tgStreamReader.stop();
-			tgStreamReader.close();
-		}
-	}
-
-	@Override
-	protected void onDestroy() {
-		// TODO Auto-generated method stub
-		if(tgStreamReader != null){
-			tgStreamReader.close();
-			tgStreamReader = null;
-		}
-		
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-	}
-
-	@Override
-	protected void onStop() {
-		// TODO Auto-generated method stub
-		super.onStop();
-		stop();
-	}
-
-	// TODO view
-
-	private TgStreamHandler callback = new TgStreamHandler() {
+	private final TgStreamHandler callback = new TgStreamHandler() {
 
 		@Override
 		public void onStatesChanged(int connectionStates) {
 			// TODO Auto-generated method stub
 			Log.d(TAG, "connectionStates change to: " + connectionStates);
 			switch (connectionStates) {
-			case ConnectionStates.STATE_CONNECTED:
-				//sensor.start();
-				showToast("Connected", Toast.LENGTH_SHORT);
-				break;
-			case ConnectionStates.STATE_WORKING:
-				
-				break;
-			case ConnectionStates.STATE_GET_DATA_TIME_OUT:
-				//  get data time out
-				break;
-			case ConnectionStates.STATE_COMPLETE:
-				//read file complete
-				showToast("STATE_COMPLETE", Toast.LENGTH_SHORT);
-				break;
+				case ConnectionStates.STATE_CONNECTED:
+					//sensor.start();
+					showToast("Connected", Toast.LENGTH_SHORT);
+					break;
+				case ConnectionStates.STATE_WORKING:
+
+					break;
+				case ConnectionStates.STATE_GET_DATA_TIME_OUT:
+					//  get data time out
+					break;
+				case ConnectionStates.STATE_COMPLETE:
+					//read file complete
+					showToast("STATE_COMPLETE", Toast.LENGTH_SHORT);
+					break;
 			case ConnectionStates.STATE_STOPPED:
 				break;
 			case ConnectionStates.STATE_DISCONNECTED:
@@ -179,7 +96,7 @@ public class FileDemoActivity extends Activity {
 		@Override
 		public void onChecksumFail(byte[] payload, int length, int checksum) {
 			// TODO Auto-generated method stub
-			
+
 			badPacketCount ++;
 			Message msg = LinkDetectedHandler.obtainMessage();
 			msg.what = MSG_UPDATE_BAD_PACKET;
@@ -200,48 +117,156 @@ public class FileDemoActivity extends Activity {
 		}
 
 	};
+	FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-	private static final int MSG_UPDATE_BAD_PACKET = 1001;
-	private static final int MSG_UPDATE_STATE = 1002;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+		setContentView(R.layout.first_view);
 
-	int raw;
-	private Handler LinkDetectedHandler = new Handler() {
+		initView();
+	}
 
+	private DatabaseReference databaseReference;
+	private final Handler LinkDetectedHandler = new Handler() {
+
+		@SuppressLint("HandlerLeak")
 		@Override
 		public void handleMessage(Message msg) {
 
 			switch (msg.what) {
 
-			case MindDataType.CODE_MEDITATION:
-				Log.d(TAG, "HeadDataType.CODE_MEDITATION " + msg.arg1);
-				tv_meditation.setText("" +msg.arg1 );
-				break;
-			case MindDataType.CODE_ATTENTION:
-				Log.d(TAG, "CODE_ATTENTION " + msg.arg1);
-				tv_attention.setText("" +msg.arg1 );
-				break;
-			case MindDataType.CODE_POOR_SIGNAL://
-				int poorSignal = msg.arg1;
-				Log.d(TAG, "poorSignal:" + poorSignal);
-				tv_ps.setText(""+msg.arg1);
+				case MindDataType.CODE_MEDITATION:
+					Log.d(TAG, "CODE_MEDITATION " + msg.arg1);
+					tv_meditation.setText("" + msg.arg1);
+					break;
+				case MindDataType.CODE_ATTENTION:
+					Log.d(TAG, "CODE_ATTENTION " + msg.arg1);
+					tv_attention.setText("" + msg.arg1);
+					break;
+				case MindDataType.CODE_POOR_SIGNAL://
+					int poorSignal = msg.arg1;
+					Log.d(TAG, "poorSignal:" + poorSignal);
+					tv_ps.setText("" + msg.arg1);
 
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
 			}
+
 			super.handleMessage(msg);
+			databaseReference.child(user.getDisplayName()).child("attention_Level").setValue(tv_attention.getText().toString().trim());
+			databaseReference.child(user.getDisplayName()).child("meditation_Level").setValue(tv_meditation.getText().toString().trim());
 		}
+
 	};
-	
-	
-	public void showToast(final String msg, final int timeStyle){
-		com.example.attentionmonitor.FileDemoActivity.this.runOnUiThread(new Runnable()    
-        {    
-            public void run()    
-            {    
-            	Toast.makeText(getApplicationContext(), msg, timeStyle).show();
-            }    
-    
-        });  
+
+	public void stop() {
+		if (tgStreamReader != null) {
+			tgStreamReader.stop();
+			tgStreamReader.close();
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		if (tgStreamReader != null) {
+			tgStreamReader.close();
+			tgStreamReader = null;
+		}
+
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		stop();
+	}
+
+	// TODO view
+
+	private void initView() {
+		tv_ps = (TextView) findViewById(R.id.tv_ps);
+		tv_attention = (TextView) findViewById(R.id.tv_attention);
+		tv_meditation = (TextView) findViewById(R.id.tv_meditation);
+
+
+		btn_start = (Button) findViewById(R.id.btn_start);
+		btn_stop = (Button) findViewById(R.id.btn_stop);
+
+
+		databaseReference = FirebaseDatabase.getInstance().getReference("DataStore");
+
+
+		btn_start.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				badPacketCount = 0;
+
+				// (3) How to destroy a TgStreamReader object
+				if (tgStreamReader != null) {
+					tgStreamReader.stop();
+					tgStreamReader.close();
+					tgStreamReader = null;
+				}
+				InputStream is = getApplicationContext().getResources().openRawResource(R.raw.tgam_capture);
+				// Example of TgStreamReader(InputStream is, TgStreamHandler tgStreamHandler)
+				tgStreamReader = new TgStreamReader(is, callback);
+
+				// (1) Example of setReadFileBlockSize(int), the default block size is 8, call it before connectAndStart() or connect()
+				tgStreamReader.setReadFileBlockSize(16);
+				// (2) Example of setReadFileDelay(int), the default delay time is 2ms, call it before connectAndStart() or connect()
+				tgStreamReader.setReadFileDelay(2);
+
+				tgStreamReader.connectAndStart();
+				addData();
+			}
+		});
+
+		btn_stop.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
+				stop();
+			}
+
+		});
+	}
+
+	private static final int MSG_UPDATE_BAD_PACKET = 1001;
+	private static final int MSG_UPDATE_STATE = 1002;
+
+	int raw;
+
+	private void addData() {
+		String id = user.getDisplayName();
+		String name = user.getDisplayName();
+		String attention = tv_attention.getText().toString().trim();
+		String meditation = tv_meditation.getText().toString().trim();
+		DataStore datastore = new DataStore(id, name, attention, meditation);
+		databaseReference.child(id).setValue(datastore);
+		Toast.makeText(this, "Data added", Toast.LENGTH_LONG).show();
+	}
+
+
+	public void showToast(final String msg, final int timeStyle) {
+		com.example.attentionmonitor.FileDemoActivity.this.runOnUiThread(new Runnable() {
+			public void run() {
+				Toast.makeText(getApplicationContext(), msg, timeStyle).show();
+			}
+
+		});
 	}
 }

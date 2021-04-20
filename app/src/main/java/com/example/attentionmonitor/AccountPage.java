@@ -6,15 +6,19 @@ import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.Objects;
 
 
 public class AccountPage extends AppCompatActivity {
@@ -28,6 +32,7 @@ public class AccountPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.account);
+
         BottomNavigationView bottomNavigationView=findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.navigation_profile);
 
@@ -57,9 +62,12 @@ public class AccountPage extends AppCompatActivity {
 
 
         GoogleSignInAccount signInAccount = GoogleSignIn.getLastSignedInAccount(this);
-        if(signInAccount != null){
+        if (signInAccount != null) {
             name.setText(signInAccount.getDisplayName());
             mail.setText(signInAccount.getEmail());
+            String personImage = Objects.requireNonNull(signInAccount.getPhotoUrl()).toString();
+            ImageView userImage = findViewById(R.id.client_dp);
+            Glide.with(this).load(personImage).into(userImage);
         }
 
 

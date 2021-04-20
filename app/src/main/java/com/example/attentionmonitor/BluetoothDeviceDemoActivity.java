@@ -26,6 +26,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.neurosky.connection.ConnectionStates;
 import com.neurosky.connection.DataType.MindDataType;
 import com.neurosky.connection.DataType.MindDataType.FilterType;
@@ -52,6 +56,7 @@ public class BluetoothDeviceDemoActivity extends Activity {
 	private BluetoothAdapter mBluetoothAdapter;
 	private BluetoothDevice mBluetoothDevice;
 	private String address = null;
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -89,62 +94,18 @@ public class BluetoothDeviceDemoActivity extends Activity {
 	private Button btn_stop = null;
 	private Button btn_selectdevice = null;
 
-	
+	FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+	private DatabaseReference databaseReference;
 	private int badPacketCount = 0;
 	private final boolean isPressing = false;
-	
-	private void start(){
-		if(address != null){
-			BluetoothDevice bd = mBluetoothAdapter.getRemoteDevice(address);
-			createStreamReader(bd);
-
-			tgStreamReader.connectAndStart();
-		}else{
-			showToast("Please select device first!", Toast.LENGTH_SHORT);
-		}
-	}
-
-	public void stop() {
-		if(tgStreamReader != null){
-			tgStreamReader.stop();
-			tgStreamReader.close();//if there is not stop cmd, please call close() or the data will accumulate 
-			tgStreamReader = null;
-		}
-	}
-
-	@Override
-	protected void onDestroy() {
-		// TODO Auto-generated method stub
-		if(tgStreamReader != null){
-			tgStreamReader.close();
-			tgStreamReader = null;
-		}
-		super.onDestroy();
-	}
-
-	@Override
-	protected void onStart() {
-		super.onStart();
-	}
-
-	@Override
-	protected void onStop() {
-		// TODO Auto-generated method stub
-		super.onStop();
-		stop();
-	}
-
-	// TODO view
-
-	private int currentState = 0;
 	private final Handler LinkDetectedHandler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
 
 			switch (msg.what) {
-			case 1234:
-        		tgStreamReader.MWM15_getFilterType();
+				case 1234:
+					tgStreamReader.MWM15_getFilterType();
         		isReadFilter = true;
         		Log.d(TAG,"MWM15_getFilterType ");
 
@@ -178,48 +139,51 @@ public class BluetoothDeviceDemoActivity extends Activity {
         			}
         		}
 
-        		break;
-			case MindDataType.CODE_MEDITATION:
-				Log.d(TAG, "HeadDataType.CODE_MEDITATION " + msg.arg1);
-				tv_meditation.setText("" +msg.arg1 );
 				break;
-			case MindDataType.CODE_ATTENTION:
-				Log.d(TAG, "CODE_ATTENTION " + msg.arg1);
-				tv_attention.setText("" +msg.arg1 );
-				break;
+				case MindDataType.CODE_MEDITATION:
+					Log.d(TAG, "HeadDataType.CODE_MEDITATION " + msg.arg1);
+					tv_meditation.setText("" + msg.arg1);
+					break;
+				case MindDataType.CODE_ATTENTION:
+					Log.d(TAG, "CODE_ATTENTION " + msg.arg1);
+					tv_attention.setText("" + msg.arg1);
+					break;
 
-			case MindDataType.CODE_POOR_SIGNAL://
-				int poorSignal = msg.arg1;
-				Log.d(TAG, "poorSignal:" + poorSignal);
-				tv_ps.setText(""+msg.arg1);
+				case MindDataType.CODE_POOR_SIGNAL://
+					int poorSignal = msg.arg1;
+					Log.d(TAG, "poorSignal:" + poorSignal);
+					tv_ps.setText("" + msg.arg1);
 
-				break;
-			default:
-				break;
+					break;
+				default:
+					break;
 			}
 			super.handleMessage(msg);
+			databaseReference.child(user.getDisplayName()).child("attention_Level").setValue(tv_attention.getText().toString().trim());
+			databaseReference.child(user.getDisplayName()).child("meditation_Level").setValue(tv_meditation.getText().toString().trim());
 		}
 	};
+	private int currentState = 0;
 	private final TgStreamHandler callback = new TgStreamHandler() {
 
 		@Override
 		public void onStatesChanged(int connectionStates) {
 			// TODO Auto-generated method stub
 			Log.d(TAG, "connectionStates change to: " + connectionStates);
-			currentState  = connectionStates;
+			currentState = connectionStates;
 			switch (connectionStates) {
-			case ConnectionStates.STATE_CONNECTED:
-				//sensor.start();
-				showToast("Connected", Toast.LENGTH_SHORT);
-				break;
-			case ConnectionStates.STATE_WORKING:
-				//byte[] cmd = new byte[1];
-				//cmd[0] = 's';
-				//tgStreamReader.sendCommandtoDevice(cmd);
-				LinkDetectedHandler.sendEmptyMessageDelayed(1234, 5000);
-				break;
-			case ConnectionStates.STATE_GET_DATA_TIME_OUT:
-				//get data time out
+				case ConnectionStates.STATE_CONNECTED:
+					//sensor.start();
+					showToast("Connected", Toast.LENGTH_SHORT);
+					break;
+				case ConnectionStates.STATE_WORKING:
+					//byte[] cmd = new byte[1];
+					//cmd[0] = 's';
+					//tgStreamReader.sendCommandtoDevice(cmd);
+					LinkDetectedHandler.sendEmptyMessageDelayed(1234, 5000);
+					break;
+				case ConnectionStates.STATE_GET_DATA_TIME_OUT:
+					//get data time out
 				break;
 			case ConnectionStates.STATE_COMPLETE:
 				//read file complete
@@ -274,14 +238,68 @@ public class BluetoothDeviceDemoActivity extends Activity {
 		}
 
 	};
+
+	private void start() {
+		if (address != null) {
+			BluetoothDevice bd = mBluetoothAdapter.getRemoteDevice(address);
+			createStreamReader(bd);
+
+			tgStreamReader.connectAndStart();
+		} else {
+			showToast("Please select device first!", Toast.LENGTH_SHORT);
+		}
+	}
+
+	public void stop() {
+		if (tgStreamReader != null) {
+			tgStreamReader.stop();
+			tgStreamReader.close();//if there is not stop cmd, please call close() or the data will accumulate
+			tgStreamReader = null;
+		}
+	}
+
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		if (tgStreamReader != null) {
+			tgStreamReader.close();
+			tgStreamReader = null;
+		}
+		super.onDestroy();
+	}
+
+	// TODO view
+
+	@Override
+	protected void onStart() {
+		super.onStart();
+	}
+
+	@Override
+	protected void onStop() {
+		// TODO Auto-generated method stub
+		super.onStop();
+		stop();
+	}
+
+	private void addData() {
+		String id = user.getDisplayName();
+		String name = user.getDisplayName();
+		String attention = tv_attention.getText().toString().trim();
+		String meditation = tv_meditation.getText().toString().trim();
+		DataStore datastore = new DataStore(id, name, attention, meditation);
+		databaseReference.child(id).setValue(datastore);
+		Toast.makeText(this, "Data added", Toast.LENGTH_LONG).show();
+	}
+
 	private static final int MSG_UPDATE_BAD_PACKET = 1001;
 	private static final int MSG_UPDATE_STATE = 1002;
 	private static final int MSG_CONNECT = 1003;
 	private boolean isReadFilter = false;
 
 	int raw;
- //Select device operation
- private final OnItemClickListener selectDeviceItemClickListener = new OnItemClickListener(){
+	//Select device operation
+	private final OnItemClickListener selectDeviceItemClickListener = new OnItemClickListener() {
 
 		@Override
 		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
@@ -353,7 +371,7 @@ public class BluetoothDeviceDemoActivity extends Activity {
 
 		btn_start = findViewById(R.id.btn_start);
 		btn_stop = findViewById(R.id.btn_stop);
-
+		databaseReference = FirebaseDatabase.getInstance().getReference("DataStore");
 		btn_start.setOnClickListener(new OnClickListener() {
 
 			@Override

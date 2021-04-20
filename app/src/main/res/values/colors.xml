@@ -25,6 +25,8 @@
     <color name="btn_login_bg">#eceef1</color>
     <color name="lbl_name">#333333</color>
     <color name="btn_logut_bg">#ff6861</color>
+    <color name="green_color">#AD3CB166</color>
+    <color name="while_color">#FFFFFF</color>
 
 
 </resources>

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:id="@+id/Layout1"
-    android:background="#C4C4C4"
+    android:background="@color/design_default_color_on_primary"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DemoActivity">

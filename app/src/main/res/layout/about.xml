@@ -4,17 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimaryDark"
+    android:background="@color/design_default_color_on_primary"
     tools:context=".AboutPage">
 
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:gravity="center"
-        android:text="About"
-        android:textSize="50sp" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
@@ -22,6 +14,15 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#ffff"
-        app:menu="@menu/menu_bottom"/>
+        app:menu="@menu/menu_bottom" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="match_parent"
+        android:layout_height="674dp"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:text="Welcome to the Student Attention Monitoring Application which is designed by Dhanushkumar M "
+        android:textSize="18sp" />
 
 </RelativeLayout>
