@@ -51,29 +51,26 @@
 
         <Button
             android:id="@+id/google_signIn"
-            android:layout_width="match_parent"
+            android:layout_width="266dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:background="@drawable/rounded_corners"
-            android:drawableLeft="@drawable/google"
+            android:drawableLeft="@drawable/common_google_signin_btn_icon_dark_normal"
             android:elevation="8dp"
             android:text="Sign In with Google"
             android:textColor="#fff" />
 
-
-
-
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
-                android:gravity="bottom"
-                android:includeFontPadding="false"
-                android:shadowColor="#0E0E0E"
-                android:text="Designed By Dhanushkumar M"
-                android:textAlignment="center"
-                android:textColor="#000000"
-                android:textSize="14sp"
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp"
+            android:gravity="bottom"
+            android:includeFontPadding="false"
+            android:shadowColor="#0E0E0E"
+            android:text="Designed By Dhanushkumar M"
+            android:textAlignment="center"
+            android:textColor="#000000"
+            android:textSize="14sp"
                 tools:ignore="RtlCompat" />
 
 

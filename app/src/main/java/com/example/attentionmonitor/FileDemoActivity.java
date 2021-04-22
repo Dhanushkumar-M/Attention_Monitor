@@ -14,16 +14,24 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.neurosky.connection.ConnectionStates;
 import com.neurosky.connection.DataType.MindDataType;
 import com.neurosky.connection.TgStreamHandler;
 import com.neurosky.connection.TgStreamReader;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This activity demonstrates how to use the constructor:
@@ -47,7 +55,7 @@ public class FileDemoActivity extends Activity {
 
 
 	private int badPacketCount = 0;
-
+	FirebaseFirestore db = FirebaseFirestore.getInstance();
 	private TgStreamReader tgStreamReader;
 
 
@@ -231,6 +239,7 @@ public class FileDemoActivity extends Activity {
 
 				tgStreamReader.connectAndStart();
 				addData();
+				//addFirestoe();
 			}
 		});
 
@@ -256,10 +265,81 @@ public class FileDemoActivity extends Activity {
 		String attention = tv_attention.getText().toString().trim();
 		String meditation = tv_meditation.getText().toString().trim();
 		DataStore datastore = new DataStore(id, name, attention, meditation);
-		databaseReference.child(id).setValue(datastore);
-		Toast.makeText(this, "Data added", Toast.LENGTH_LONG).show();
+		db.collection("Userdata").document("User").set(datastore).addOnSuccessListener(new OnSuccessListener<Void>() {
+			@Override
+			public void onSuccess(Void aVoid) {
+				Toast.makeText(FileDemoActivity.this, "User Registered",
+						Toast.LENGTH_SHORT).show();
+			}
+		})
+				.addOnFailureListener(new OnFailureListener() {
+					@Override
+					public void onFailure(@NonNull Exception e) {
+						Toast.makeText(FileDemoActivity.this, "ERROR" + e.toString(),
+								Toast.LENGTH_SHORT).show();
+						Log.d("TAG", e.toString());
+					}
+				});
+		databaseReference.child(id).setValue(datastore).addOnSuccessListener(new OnSuccessListener<Void>() {
+			@Override
+			public void onSuccess(Void aVoid) {
+				Toast.makeText(FileDemoActivity.this, "User Registered",
+						Toast.LENGTH_SHORT).show();
+			}
+		})
+				.addOnFailureListener(new OnFailureListener() {
+					@Override
+					public void onFailure(@NonNull Exception e) {
+						Toast.makeText(FileDemoActivity.this, "ERROR" + e.toString(),
+								Toast.LENGTH_SHORT).show();
+						Log.d("TAG", e.toString());
+					}
+				});
+		//Toast.makeText(this, "Data added", Toast.LENGTH_LONG).show();
 	}
 
+	private void addFirestoe() {
+		String name = user.getDisplayName();
+		String attention = tv_attention.getText().toString().trim();
+		String meditation = tv_meditation.getText().toString().trim();
+		Map<String, Object> newData = new HashMap<>();
+		newData.put("Name", name);
+		newData.put("Attention", attention);
+		newData.put("Meditation", meditation);
+		db.collection("Monitor").document("UserData").set(newData)
+				.addOnSuccessListener(new OnSuccessListener<Void>() {
+					@Override
+					public void onSuccess(Void aVoid) {
+						Toast.makeText(FileDemoActivity.this, "User Registered",
+								Toast.LENGTH_SHORT).show();
+					}
+				})
+				.addOnFailureListener(new OnFailureListener() {
+					@Override
+					public void onFailure(@NonNull Exception e) {
+						Toast.makeText(FileDemoActivity.this, "ERROR" + e.toString(),
+								Toast.LENGTH_SHORT).show();
+						Log.d("TAG", e.toString());
+					}
+				});
+	}
+
+	private void UpdateData() {
+		String name = user.getDisplayName();
+		String attention = tv_attention.getText().toString().trim();
+		String meditation = tv_meditation.getText().toString().trim();
+		DocumentReference userdata = db.collection("Monitor").document("UserData");
+		userdata.update("Name", name);
+		userdata.update("Attention", attention);
+		userdata.update("Meditation", meditation)
+				.addOnSuccessListener(new OnSuccessListener<Void>() {
+					@Override
+					public void onSuccess(Void aVoid) {
+						Toast.makeText(FileDemoActivity.this, "Updated Successfully",
+								Toast.LENGTH_SHORT).show();
+					}
+				});
+	}
 
 	public void showToast(final String msg, final int timeStyle) {
 		com.example.attentionmonitor.FileDemoActivity.this.runOnUiThread(new Runnable() {
